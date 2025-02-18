@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticação com Parse</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/parse/3.4.2/parse.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f7fa;
+            --text-color: #333;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-color);
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            transition: all 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            font-size: 1.8rem;
+            text-align: center;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background: #3a7bd5;
+        }
+
+        #logoutBtn {
+            background: var(--error-color);
+            display: none;
+        }
+
+        #logoutBtn:hover {
+            background: #c0392b;
+        }
+
+        #message {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        #welcome {
+            display: none;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--success-color);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .form-toggle {
+            margin-top: 1rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .form-toggle:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Autenticação Parse</h2>
+        <p id="welcome"></p>
+
+        <div id="registerForm">
+            <div class="input-group">
+                <label for="registerName">Nome Completo</label>
+                <input type="text" id="registerName" placeholder="Digite seu nome completo">
+            </div>
+            <div class="input-group">
+                <label for="registerEmail">E-mail</label>
+                <input type="email" id="registerEmail" placeholder="Digite seu e-mail">
+            </div>
+            <div class="input-group">
+                <label for="registerPhone">Telefone</label>
+                <input type="tel" id="registerPhone" placeholder="Digite seu telefone">
+            </div>
+            <div class="input-group">
+                <label for="registerPassword">Senha</label>
+                <input type="password" id="registerPassword" placeholder="Digite sua senha">
+            </div>
+            <button id="registerBtn">Cadastrar</button>
+            <p class="form-toggle" id="showLoginForm">Já tem uma conta? Faça login</p>
+        </div>
+
+        <div id="loginForm" style="display: none;">
+            <div class="input-group">
+                <label for="loginEmail">E-mail</label>
+                <input type="email" id="loginEmail" placeholder="Digite seu e-mail">
+            </div>
+            <div class="input-group">
+                <label for="loginPassword">Senha</label>
+                <input type="password" id="loginPassword" placeholder="Digite sua senha">
+            </div>
+            <button id="loginBtn">Entrar</button>
+            <p class="form-toggle" id="showRegisterForm">Não tem uma conta? Cadastre-se</p>
+        </div>
+
+        <button id="logoutBtn">Sair</button>
+
+        <p id="message"></p>
+    </div>
+
+    <script>
+        // The JavaScript remains the same as in the previous example
+        // Configurar Parse com Back4App
+        Parse.initialize("xGSWIAwBRr1NY5JssvWcthAcOCKYUmPIkMTNAef8", "N2lFcwtSn4Wq7RKP0Ab8uU5SEiCmoJNJS2BO0vn4");
+        Parse.serverURL = "https://parseapi.back4app.com/";
+
+        // Elementos da UI
+        const registerForm = document.getElementById("registerForm");
+        const loginForm = document.getElementById("loginForm");
+        const registerNameInput = document.getElementById("registerName");
+        const registerEmailInput = document.getElementById("registerEmail");
+        const registerPhoneInput = document.getElementById("registerPhone");
+        const registerPasswordInput = document.getElementById("registerPassword");
+        const loginEmailInput = document.getElementById("loginEmail");
+        const loginPasswordInput = document.getElementById("loginPassword");
+        const loginBtn = document.getElementById("loginBtn");
+        const registerBtn = document.getElementById("registerBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const message = document.getElementById("message");
+        const welcomeText = document.getElementById("welcome");
+        const showLoginForm = document.getElementById("showLoginForm");
+        const showRegisterForm = document.getElementById("showRegisterForm");
+
+        // Verificar se o usuário está logado ao carregar a página
+        async function checkUser() {
+            const currentUser = Parse.User.current();
+            if (currentUser) {
+                const username = currentUser.get("name");
+                welcomeText.textContent = `Bem-vindo, ${username}!`;
+                welcomeText.style.display = "block";
+                registerForm.style.display = "none";
+                loginForm.style.display = "none";
+                logoutBtn.style.display = "block";
+            }
+        }
+
+        // Função de login
+        async function login() {
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+            message.textContent = ""; // Limpar mensagens
+
+            try {
+                const user = await Parse.User.logIn(email, password);
+                message.textContent = "Login bem-sucedido!";
+                message.style.color = "var(--success-color)";
+                checkUser();
+            } catch (error) {
+                message.textContent = "Erro: " + error.message;
+                message.style.color = "var(--error-color)";
+            }
+        }
+
+        // Função de cadastro
+        async function register() {
+            const name = registerNameInput.value.trim();
+            const email = registerEmailInput.value.trim();
+            const phone = registerPhoneInput.value.trim();
+            const password = registerPasswordInput.value;
+
+            message.textContent = ""; // Limpar mensagens
+
+            if (!name || !email || !phone || !password) {
+                message.textContent = "Por favor, preencha todos os campos!";
+                message.style.color = "var(--error-color)";
+                return;
+            }
+
+            const user = new Parse.User();
+            user.set("username", email);
+            user.set("email", email);
+            user.set("password", password);
+            user.set("name", name);
+            user.set("phone", phone);
+
+            try {
+                await user.signUp();
+                message.textContent = "Cadastro realizado! Agora faça login.";
+                message.style.color = "var(--success-color)";
+                showLoginForm.click(); // Switch to login form
+            } catch (error) {
+                message.textContent = "Erro: " + error.message;
+                message.style.color = "var(--error-color)";
+            }
+        }
+
+        // Função de logout
+        async function logout() {
+            try {
+                await Parse.User.logOut();
+                message.textContent = "Você saiu!";
+                message.style.color = "var(--success-color)";
+                welcomeText.style.display = "none";
+                registerForm.style.display = "block";
+                loginForm.style.display = "none";
+                logoutBtn.style.display = "none";
+            } catch (error) {
+                message.textContent = "Erro ao sair.";
+                message.style.color = "var(--error-color)";
+            }
+        }
+
+        // Eventos dos botões
+        loginBtn.addEventListener("click", login);
+        registerBtn.addEventListener("click", register);
+        logoutBtn.addEventListener("click", logout);
+
+        // Toggle entre formulários
+        showLoginForm.addEventListener("click", () => {
+            registerForm.style.display = "none";
+            loginForm.style.display = "block";
+        });
+
+        showRegisterForm.addEventListener("click", () => {
+            loginForm.style.display = "none";
+            registerForm.style.display = "block";
+        });
+
+        // Checar usuário ao carregar a página
+        checkUser();
+    </script>
+
+</body>
+</html>
